@@ -1,8 +1,6 @@
 package services
 
 import (
-	"net/http"
-
 	"github.com/tamihyo/bookstore_items-api/domains/items"
 	"github.com/tamihyo/bookstore_utils-go/rest_errors"
 )
@@ -18,8 +16,8 @@ var (
 
 //basic interface that we are going to develop
 type itemsServiceInterface interface {
-	Create(items.Item) (*items.Item, *rest_errors.RestErr)
-	Get(string) (*items.Item, *rest_errors.RestErr)
+	Create(items.Item) (*items.Item, rest_errors.RestErr)
+	Get(string) (*items.Item, rest_errors.RestErr)
 }
 
 type itemsService struct{}
@@ -31,8 +29,12 @@ func (s *itemsService) Create(item items.Item) (*items.Item, rest_errors.RestErr
 	return &item, nil
 }
 
-func (s *itemsService) Get(string) (*items.Item, rest_errors.RestErr) {
-	return nil, rest_errors.NewRestError{
-		"implement me",http.StatusNotImplemented,"not_implemented",nil
+func (s *itemsService) Get(id string) (*items.Item, rest_errors.RestErr) {
+	item := items.Item{Id: id}
+
+	if err := item.Get(); err != nil {
+		return nil, err
 	}
+	return &item, nil
+	// return nil, rest_errors.NewRestError("implement me", http.StatusNotImplemented, "not_implemented", nil)
 }

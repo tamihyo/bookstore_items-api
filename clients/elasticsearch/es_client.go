@@ -16,7 +16,8 @@ var (
 
 type esClientInterface interface {
 	setClient(c *elastic.Client)
-	Index(string, interface{}) (*elastic.IndexResponse, error)
+	Index(string, string, interface{}) (*elastic.IndexResponse, error)
+	Get(string, docType string, id string) (*elastic.GetResult, error)
 }
 
 //making struct based on return of package function
@@ -26,7 +27,6 @@ type esClient struct {
 
 func Init() {
 	log := logger.GetLogger()
-
 	client, err := elastic.NewClient(
 		elastic.SetURL("http://127.0.0.1:9200"),
 		elastic.SetHealthcheckInterval(10*time.Second),
@@ -53,10 +53,11 @@ func (c *esClient) setClient(client *elastic.Client) {
 }
 
 //implement index function
-func (c *esClient) Index(index string, doc interface{}) (*elastic.IndexResponse, error) {
+func (c *esClient) Index(index string, docType string, doc interface{}) (*elastic.IndexResponse, error) {
 	ctx := context.Background()
 	result, err := c.client.Index().
-		Index("items").
+		Index(index).
+		Type(docType).
 		BodyJson(doc).
 		Do(ctx)
 	if err != nil {
@@ -64,4 +65,27 @@ func (c *esClient) Index(index string, doc interface{}) (*elastic.IndexResponse,
 		return nil, err
 	}
 	return result, nil
+}
+
+func (c *esClient) Get(index string, docType string, id string) (*elastic.GetResult, error) {
+	ctx := context.Background()
+	result, err := c.client.Get().
+		Index(index).
+		Type(docType).
+		Id(id).
+		Do(ctx)
+
+	if err != nil {
+		fmt.Println(result.Found)
+		logger.Error(fmt.Sprintf("error wheren trying to get id %s", id), err)
+		return nil, err
+	}
+
+	//doc and err not exists
+	if !result.Found {
+		return nil, nil
+	}
+
+	return result, nil
+
 }
