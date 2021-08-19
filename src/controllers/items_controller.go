@@ -7,9 +7,10 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/tamihyo/bookstore_items-api/domains/items"
-	"github.com/tamihyo/bookstore_items-api/services"
-	"github.com/tamihyo/bookstore_items-api/utils/http_utils"
+	"github.com/tamihyo/bookstore_items-api/src/domains/items"
+	"github.com/tamihyo/bookstore_items-api/src/domains/queries"
+	"github.com/tamihyo/bookstore_items-api/src/services"
+	"github.com/tamihyo/bookstore_items-api/src/utils/http_utils"
 	"github.com/tamihyo/bookstore_users-go/oauth"
 	"github.com/tamihyo/bookstore_utils-go/rest_errors"
 )
@@ -21,6 +22,7 @@ var (
 type itemsControllerInterface interface {
 	Create(w http.ResponseWriter, r *http.Request)
 	Get(w http.ResponseWriter, r *http.Request)
+	Search(w http.ResponseWriter, r *http.Request)
 }
 
 //defining as method
@@ -79,4 +81,28 @@ func (c *itemsController) Get(w http.ResponseWriter, r *http.Request) {
 	}
 	http_utils.RespondJson(w, http.StatusOK, item)
 
+}
+
+func (c *itemsController) Search(w http.ResponseWriter, r *http.Request) {
+	bytes, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		apiErr := rest_errors.NewBadRequestError("invalid json body")
+		http_utils.RespondError(w, apiErr)
+		return
+	}
+	defer r.Body.Close()
+
+	var query queries.EsQuery
+	if err := json.Unmarshal(bytes, &query); err != nil {
+		apiErr := rest_errors.NewBadRequestError("invalid json body")
+		http_utils.RespondError(w, apiErr)
+		return
+	}
+
+	items, searchErr := services.ItemsService.Search(query)
+	if err != nil {
+		http_utils.RespondError(w, searchErr)
+		return
+	}
+	http_utils.RespondJson(w, http.StatusOK, items)
 }

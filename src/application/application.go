@@ -1,4 +1,4 @@
-package app
+package application
 
 import (
 	"log"
@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/tamihyo/bookstore_items-api/clients/elasticsearch"
+	"github.com/tamihyo/bookstore_items-api/src/clients/elasticsearch"
 )
 
 var (
